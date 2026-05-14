@@ -1,0 +1,440 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Dalamud.Injector</name>
+    </assembly>
+    <members>
+        <member name="T:Dalamud.Injector.ExistingProcess">
+            <summary>
+            Class representing an already held process handle.
+            </summary>
+        </member>
+        <member name="M:Dalamud.Injector.ExistingProcess.#ctor(System.IntPtr)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Dalamud.Injector.ExistingProcess"/> class.
+            </summary>
+            <param name="handle">The existing held process handle.</param>
+        </member>
+        <member name="T:Dalamud.Injector.GameStart">
+            <summary>
+            Class responsible for starting the game and stripping ACL protections from processes.
+            </summary>
+        </member>
+        <member name="M:Dalamud.Injector.GameStart.LaunchGame(System.String,System.String,System.String,System.Boolean,System.Action{System.Diagnostics.Process},System.Boolean)">
+            <summary>
+            Start a process without ACL protections.
+            </summary>
+            <param name="workingDir">The working directory.</param>
+            <param name="exePath">The path to the executable file.</param>
+            <param name="arguments">Arguments to pass to the executable file.</param>
+            <param name="dontFixAcl">Don't actually fix the ACL.</param>
+            <param name="beforeResume">Action to execute before the process is started.</param>
+            <param name="waitForGameWindow">Wait for the game window to be ready before proceeding.</param>
+            <returns>The started process.</returns>
+            <exception cref="T:System.ComponentModel.Win32Exception">Thrown when a win32 error occurs.</exception>
+            <exception cref="T:Dalamud.Injector.GameStart.GameStartException">Thrown when the process did not start correctly.</exception>
+        </member>
+        <member name="M:Dalamud.Injector.GameStart.CopyAclFromSelfToTargetProcess(System.IntPtr)">
+            <summary>
+            Copies ACL of current process to the target process.
+            </summary>
+            <param name="hProcess">Native handle to the target process.</param>
+            <exception cref="T:System.ComponentModel.Win32Exception">Thrown when a win32 error occurs.</exception>
+        </member>
+        <member name="M:Dalamud.Injector.GameStart.ClaimSeDebug">
+            <summary>
+            Claim a SE Debug Privilege.
+            </summary>
+        </member>
+        <member name="T:Dalamud.Injector.GameStart.GameStartException">
+            <summary>
+            Exception thrown when the process has exited before a window could be found.
+            </summary>
+        </member>
+        <member name="M:Dalamud.Injector.GameStart.GameStartException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Dalamud.Injector.GameStart.GameStartException"/> class.
+            </summary>
+            <param name="message">The message to pass on.</param>
+        </member>
+        <member name="T:Dalamud.Injector.Injector">
+            <summary>
+            This class implements injecting into a remote process. It is a highly stripped down version of the
+            https://github.com/Reloaded-Project injector/assembler implementation due to issues with Lutris and
+            Wine.
+            </summary>
+        </member>
+        <member name="M:Dalamud.Injector.Injector.#ctor(System.Diagnostics.Process,System.Boolean)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Dalamud.Injector.Injector"/> class.
+            </summary>
+            <param name="targetProcess">Process to inject.</param>
+            <param name="disposeTargetProcess">Dispose given process on disposing self.</param>
+        </member>
+        <member name="M:Dalamud.Injector.Injector.Finalize">
+            <summary>
+            Finalizes an instance of the <see cref="T:Dalamud.Injector.Injector"/> class.
+            </summary>
+        </member>
+        <member name="M:Dalamud.Injector.Injector.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="M:Dalamud.Injector.Injector.LoadLibrary(System.String,System.IntPtr@)">
+            <summary>
+            Load a module by absolute file path.
+            </summary>
+            <param name="modulePath">Absolute file path.</param>
+            <param name="address">Address to the module.</param>
+        </member>
+        <member name="M:Dalamud.Injector.Injector.GetFunctionAddress(System.IntPtr,System.String,System.UIntPtr@)">
+            <summary>
+            Get the address of an exported module function.
+            </summary>
+            <param name="module">Module address.</param>
+            <param name="functionName">Name of the exported method.</param>
+            <param name="address">Address to the function.</param>
+        </member>
+        <member name="M:Dalamud.Injector.Injector.CallRemoteFunction(System.UIntPtr,System.UIntPtr)">
+            <summary>
+            Call a method in a remote process via CreateRemoteThread.
+            </summary>
+            <param name="methodAddress">Method address.</param>
+            <param name="parameterAddress">Parameter address.</param>
+            <returns>Thread exit code.</returns>
+        </member>
+        <member name="M:Dalamud.Injector.LegacyBlowfish.#ctor(System.Byte[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:Dalamud.Injector.LegacyBlowfish"/> class.
+            </summary>
+            <param name="key">The key to use.</param>
+        </member>
+        <member name="T:Dalamud.Injector.Program">
+            <summary>
+            Entrypoint to the program.
+            </summary>
+        </member>
+        <member name="M:Dalamud.Injector.Program.Main(System.String[])">
+            <summary>
+            Start the Dalamud injector.
+            </summary>
+            <param name="argsArray">Command line arguments.</param>
+            <returns>Return value (HRESULT).</returns>
+        </member>
+        <member name="M:Dalamud.Injector.Program.EncodeParameterArgument(System.String,System.Boolean)">
+             <summary>
+                 This routine appends the given argument to a command line such that
+                 CommandLineToArgvW will return the argument string unchanged. Arguments
+                 in a command line should be separated by spaces; this function does
+                 not add these spaces.
+            
+                 Taken from https://stackoverflow.com/questions/5510343/escape-command-line-arguments-in-c-sharp
+                 and https://blogs.msdn.microsoft.com/twistylittlepassagesallalike/2011/04/23/everyone-quotes-command-line-arguments-the-wrong-way/.
+             </summary>
+             <param name="argument">Supplies the argument to encode.</param>
+             <param name="force">
+                 Supplies an indication of whether we should quote the argument even if it
+                 does not contain any characters that would ordinarily require quoting.
+             </param>
+        </member>
+        <member name="T:Windows.Win32.Foundation.PCSTR">
+            <summary>
+            A pointer to a null-terminated, constant, ANSI character string.
+            </summary>
+        </member>
+        <member name="F:Windows.Win32.Foundation.PCSTR.Value">
+            <summary>
+            A pointer to the first character in the string. The content should be considered readonly, as it was typed as constant in the SDK.
+            </summary>
+        </member>
+        <member name="P:Windows.Win32.Foundation.PCSTR.Length">
+            <summary>
+            Gets the number of characters up to the first null character (exclusive).
+            </summary>
+        </member>
+        <member name="M:Windows.Win32.Foundation.PCSTR.ToString">
+            <summary>
+            Returns a <see langword="string"/> with a copy of this character array, decoding as UTF-8.
+            </summary>
+            <returns>A <see langword="string"/>, or <see langword="null"/> if <see cref="F:Windows.Win32.Foundation.PCSTR.Value"/> is <see langword="null"/>.</returns>
+        </member>
+        <member name="M:Windows.Win32.Foundation.PCSTR.AsSpan">
+            <summary>
+            Returns a span of the characters in this string, up to the first null character (exclusive).
+            </summary>
+        </member>
+        <member name="T:Windows.Win32.Foundation.PCWSTR">
+            <summary>
+            A pointer to a null-terminated, constant character string.
+            </summary>
+        </member>
+        <member name="F:Windows.Win32.Foundation.PCWSTR.Value">
+            <summary>
+            A pointer to the first character in the string. The content should be considered readonly, as it was typed as constant in the SDK.
+            </summary>
+        </member>
+        <member name="P:Windows.Win32.Foundation.PCWSTR.Length">
+            <summary>
+            Gets the number of characters up to the first null character (exclusive).
+            </summary>
+        </member>
+        <member name="M:Windows.Win32.Foundation.PCWSTR.ToString">
+            <summary>
+            Returns a <see langword="string"/> with a copy of this character array, up to the first null character (exclusive).
+            </summary>
+            <returns>A <see langword="string"/>, or <see langword="null"/> if <see cref="F:Windows.Win32.Foundation.PCWSTR.Value"/> is <see langword="null"/>.</returns>
+        </member>
+        <member name="M:Windows.Win32.Foundation.PCWSTR.AsSpan">
+            <summary>
+            Returns a span of the characters in this string, up to the first null character (exclusive).
+            </summary>
+        </member>
+        <member name="T:Windows.Win32.FreeLibrarySafeHandle">
+            <summary>
+            Represents a Win32 handle that can be closed with <see cref="M:Windows.Win32.PInvoke.FreeLibrary(Windows.Win32.Foundation.HMODULE)"/>.
+            </summary>
+        </member>
+        <member name="T:Windows.Win32.PInvoke">
+            <content>
+            Contains extern methods from "KERNEL32.dll".
+            </content>
+            <content>
+            Contains extern methods from "USER32.dll".
+            </content>
+        </member>
+        <member name="M:Windows.Win32.PInvoke.CloseHandle(Windows.Win32.Foundation.HANDLE)">
+            <summary>Closes an open object handle.</summary>
+            <param name="hObject">A valid handle to an open object.</param>
+            <returns>
+            <para>If the function succeeds, the return value is nonzero. If the function fails, the return value is zero. To get extended error information, call <a href="https://docs.microsoft.com/windows/desktop/api/errhandlingapi/nf-errhandlingapi-getlasterror">GetLastError</a>. If the application is running under a debugger,  the function will throw an exception if it receives either a  handle value that is not valid  or a pseudo-handle value. This can happen if you close a handle twice, or if you  call <b>CloseHandle</b> on a handle returned by the <a href="https://docs.microsoft.com/windows/desktop/api/fileapi/nf-fileapi-findfirstfilea">FindFirstFile</a> function instead of calling the <a href="https://docs.microsoft.com/windows/desktop/api/fileapi/nf-fileapi-findclose">FindClose</a> function.</para>
+            </returns>
+            <remarks>
+            <para>The <b>CloseHandle</b> function closes handles to the following objects: </para>
+            <para>This doc was truncated.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/handleapi/nf-handleapi-closehandle#">Read more on learn.microsoft.com</see>.</para>
+            </remarks>
+        </member>
+        <member name="M:Windows.Win32.PInvoke.CreateRemoteThread(System.Runtime.InteropServices.SafeHandle,System.Nullable{Windows.Win32.Security.SECURITY_ATTRIBUTES},System.UIntPtr,,System.Void*,System.UInt32,System.UInt32@)">
+            <inheritdoc cref="!:CreateRemoteThread(winmdroot.Foundation.HANDLE, winmdroot.Security.SECURITY_ATTRIBUTES*, nuint, delegate *unmanaged[Stdcall]&lt;void*,uint&gt;, void*, uint, uint*)"/>
+        </member>
+        <member name="M:Windows.Win32.PInvoke.CreateRemoteThread(System.Runtime.InteropServices.SafeHandle,System.Nullable{Windows.Win32.Security.SECURITY_ATTRIBUTES},System.UIntPtr,,System.Void*,System.UInt32)">
+            <inheritdoc cref="!:CreateRemoteThread(winmdroot.Foundation.HANDLE, winmdroot.Security.SECURITY_ATTRIBUTES*, nuint, delegate *unmanaged[Stdcall]&lt;void*,uint&gt;, void*, uint, uint*)"/>
+        </member>
+        <member name="M:Windows.Win32.PInvoke.CreateRemoteThread(Windows.Win32.Foundation.HANDLE,Windows.Win32.Security.SECURITY_ATTRIBUTES*,System.UIntPtr,,System.Void*,System.UInt32,System.UInt32*)">
+            <summary>Creates a thread that runs in the virtual address space of another process.</summary>
+            <param name="hProcess">
+            <para>A handle to the process in which the thread is to be created. The handle must have the <b>PROCESS_CREATE_THREAD</b>, <b>PROCESS_QUERY_INFORMATION</b>, <b>PROCESS_VM_OPERATION</b>, <b>PROCESS_VM_WRITE</b>, and <b>PROCESS_VM_READ</b> access rights, and may fail without these rights on certain platforms. For more information, see <a href="https://docs.microsoft.com/windows/desktop/ProcThread/process-security-and-access-rights">Process Security and Access Rights</a>.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/processthreadsapi/nf-processthreadsapi-createremotethread#parameters">Read more on learn.microsoft.com</see>.</para>
+            </param>
+            <param name="lpThreadAttributes">
+            <para>A pointer to a <a href="https://docs.microsoft.com/previous-versions/windows/desktop/legacy/aa379560(v=vs.85)">SECURITY_ATTRIBUTES</a> structure that specifies a security descriptor for the new thread and determines whether child processes can inherit the returned handle. If <i>lpThreadAttributes</i> is NULL, the thread gets a default security descriptor and the handle cannot be inherited. The access control lists (ACL) in the default security descriptor for a thread come from the primary token of the creator. <b>Windows XP:  </b>The ACLs in the default security descriptor for a thread come from the primary or impersonation token of the creator. This behavior changed with Windows XP with SP2 and Windows Server 2003.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/processthreadsapi/nf-processthreadsapi-createremotethread#parameters">Read more on learn.microsoft.com</see>.</para>
+            </param>
+            <param name="dwStackSize">
+            <para>The initial size of the stack, in bytes. The system rounds this value to the nearest page. If this parameter is 0 (zero), the new thread uses the default size for the executable. For more information, see <a href="https://docs.microsoft.com/windows/desktop/ProcThread/thread-stack-size">Thread Stack Size</a>.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/processthreadsapi/nf-processthreadsapi-createremotethread#parameters">Read more on learn.microsoft.com</see>.</para>
+            </param>
+            <param name="lpStartAddress">
+            <para>A pointer to the application-defined function of type <b>LPTHREAD_START_ROUTINE</b> to be executed by the thread and represents the starting address of the thread in the remote process. The function must exist in the remote process. For more information, see <a href="https://docs.microsoft.com/previous-versions/windows/desktop/legacy/ms686736(v=vs.85)">ThreadProc</a>.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/processthreadsapi/nf-processthreadsapi-createremotethread#parameters">Read more on learn.microsoft.com</see>.</para>
+            </param>
+            <param name="lpParameter">A pointer to a variable to be passed to the thread function.</param>
+            <param name="dwCreationFlags">
+            <para>The flags that control the creation of the thread. </para>
+            <para>This doc was truncated.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/processthreadsapi/nf-processthreadsapi-createremotethread#parameters">Read more on learn.microsoft.com</see>.</para>
+            </param>
+            <param name="lpThreadId">
+            <para>A pointer to a variable that receives the thread identifier.</para>
+            <para>If this parameter is <b>NULL</b>, the thread identifier is not returned.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/processthreadsapi/nf-processthreadsapi-createremotethread#parameters">Read more on learn.microsoft.com</see>.</para>
+            </param>
+            <returns>
+            <para>If the function succeeds, the return value is a handle to the new thread. If the function fails, the return value is <b>NULL</b>. To get extended error information, call <a href="https://docs.microsoft.com/windows/desktop/api/errhandlingapi/nf-errhandlingapi-getlasterror">GetLastError</a>. Note that <b>CreateRemoteThread</b> may succeed even if <i>lpStartAddress</i> points to data, code, or is not accessible. If the start address is invalid when the thread runs, an exception occurs, and the thread terminates. Thread termination due to a invalid start address is handled as an error exit for the thread's process. This behavior is similar to the asynchronous nature of <a href="https://docs.microsoft.com/windows/desktop/api/processthreadsapi/nf-processthreadsapi-createprocessa">CreateProcess</a>, where the process is created even if it refers to invalid or missing dynamic-link libraries (DLL).</para>
+            </returns>
+            <remarks>
+            <para>The <b>CreateRemoteThread</b> function causes a new thread of execution to begin in the address space of the specified process. The thread has access to all objects that the process opens. Prior to Windows 8, Terminal Services isolates each terminal session by design. Therefore, <b>CreateRemoteThread</b> fails if the target process is in a different session than the calling process. The new thread handle is created with full access to the new thread. If a security descriptor is not provided, the handle may be used in any function that requires a thread object handle. When a security descriptor is provided, an access check is performed on all subsequent uses of the handle before access is granted. If the access check denies access, the requesting process cannot use the handle to gain access to the thread. If the thread is created in a runnable state (that is, if the <b>CREATE_SUSPENDED</b> flag is not used), the thread can start running before <a href="https://docs.microsoft.com/windows/desktop/api/processthreadsapi/nf-processthreadsapi-createthread">CreateThread</a> returns and, in particular, before  the caller receives the handle and identifier of the created thread. The thread is created with a thread priority of <b>THREAD_PRIORITY_NORMAL</b>. Use the <a href="https://docs.microsoft.com/windows/desktop/api/processthreadsapi/nf-processthreadsapi-getthreadpriority">GetThreadPriority</a> and <a href="https://docs.microsoft.com/windows/desktop/api/processthreadsapi/nf-processthreadsapi-setthreadpriority">SetThreadPriority</a> functions to get and set the priority value of a thread. When a thread terminates, the thread object attains a signaled state, which satisfies the threads that are waiting for the object. The thread object remains in the system until the thread has terminated and all handles to it are closed through a call to <a href="https://docs.microsoft.com/windows/desktop/api/handleapi/nf-handleapi-closehandle">CloseHandle</a>. The <a href="https://docs.microsoft.com/windows/desktop/api/processthreadsapi/nf-processthreadsapi-exitprocess">ExitProcess</a>, <a href="https://docs.microsoft.com/windows/desktop/api/processthreadsapi/nf-processthreadsapi-exitthread">ExitThread</a>, <a href="https://docs.microsoft.com/windows/desktop/api/processthreadsapi/nf-processthreadsapi-createthread">CreateThread</a>, <b>CreateRemoteThread</b> functions, and a process that is starting (as the result of a <a href="https://docs.microsoft.com/windows/desktop/api/processthreadsapi/nf-processthreadsapi-createprocessa">CreateProcess</a> call) are serialized between each other within a process. Only one of these events occurs in an address space at a time. This means the following restrictions hold: </para>
+            <para>This doc was truncated.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/processthreadsapi/nf-processthreadsapi-createremotethread#">Read more on learn.microsoft.com</see>.</para>
+            </remarks>
+        </member>
+        <member name="M:Windows.Win32.PInvoke.WaitForSingleObject(System.Runtime.InteropServices.SafeHandle,System.UInt32)">
+            <inheritdoc cref="M:Windows.Win32.PInvoke.WaitForSingleObject(Windows.Win32.Foundation.HANDLE,System.UInt32)"/>
+        </member>
+        <member name="M:Windows.Win32.PInvoke.WaitForSingleObject(Windows.Win32.Foundation.HANDLE,System.UInt32)">
+            <summary>Waits until the specified object is in the signaled state or the time-out interval elapses.</summary>
+            <param name="hHandle">
+            <para>A handle to the object. For a list of the object types whose handles can be specified, see the following Remarks section.</para>
+            <para>If this handle is closed while the wait is still pending, the function's behavior is undefined. The handle must have the <b>SYNCHRONIZE</b> access right. For more information, see <a href="https://docs.microsoft.com/windows/desktop/SecAuthZ/standard-access-rights">Standard Access Rights</a>.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/synchapi/nf-synchapi-waitforsingleobject#parameters">Read more on learn.microsoft.com</see>.</para>
+            </param>
+            <param name="dwMilliseconds">
+            <para>The time-out interval, in milliseconds. If a nonzero value is specified, the function waits until the object is signaled or the interval elapses. If <i>dwMilliseconds</i> is zero, the function does not enter a wait state if the object is not signaled; it always returns immediately. If <i>dwMilliseconds</i> is <b>INFINITE</b>, the function will return only when the object is signaled. <b>Windows XP, Windows Server 2003, Windows Vista, Windows 7, Windows Server 2008 and Windows Server 2008 R2:  </b>The <i>dwMilliseconds</i> value does include time spent in low-power states. For example, the timeout does keep counting down while the computer is asleep. <b>Windows 8, Windows Server 2012, Windows 8.1, Windows Server 2012 R2, Windows 10 and Windows Server 2016:  </b>The <i>dwMilliseconds</i> value does not include time spent in low-power states. For example, the timeout does not keep counting down while the computer is asleep.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/synchapi/nf-synchapi-waitforsingleobject#parameters">Read more on learn.microsoft.com</see>.</para>
+            </param>
+            <returns>
+            <para>If the function succeeds, the return value indicates the event that caused the function to return. It can be one of the following values. </para>
+            <para>This doc was truncated.</para>
+            </returns>
+            <remarks>
+            <para>The <b>WaitForSingleObject</b> function checks the current state of the specified object. If the object's state is nonsignaled, the calling thread enters the wait state until the object is signaled or the time-out interval elapses. The function modifies the state of some types of synchronization objects. Modification occurs only for the object whose signaled state caused the function to return. For example, the count of a semaphore object is decreased by one. The <b>WaitForSingleObject</b> function can wait for the following objects: </para>
+            <para>This doc was truncated.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/synchapi/nf-synchapi-waitforsingleobject#">Read more on learn.microsoft.com</see>.</para>
+            </remarks>
+        </member>
+        <member name="M:Windows.Win32.PInvoke.GetExitCodeThread(System.Runtime.InteropServices.SafeHandle,System.UInt32@)">
+            <inheritdoc cref="M:Windows.Win32.PInvoke.GetExitCodeThread(Windows.Win32.Foundation.HANDLE,System.UInt32*)"/>
+        </member>
+        <member name="M:Windows.Win32.PInvoke.GetExitCodeThread(Windows.Win32.Foundation.HANDLE,System.UInt32*)">
+            <summary>Retrieves the termination status of the specified thread.</summary>
+            <param name="hThread">
+            <para>A handle to the thread. The handle must have the <b>THREAD_QUERY_INFORMATION</b> or <b>THREAD_QUERY_LIMITED_INFORMATION</b> access right. For more information, see <a href="https://docs.microsoft.com/windows/desktop/ProcThread/thread-security-and-access-rights">Thread Security and Access Rights</a>. <b>Windows Server 2003 and Windows XP:  </b>The handle must have the <b>THREAD_QUERY_INFORMATION</b> access right.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/processthreadsapi/nf-processthreadsapi-getexitcodethread#parameters">Read more on learn.microsoft.com</see>.</para>
+            </param>
+            <param name="lpExitCode">A pointer to a variable to receive the thread termination status. For more information, see Remarks.</param>
+            <returns>
+            <para>If the function succeeds, the return value is nonzero. If the function fails, the return value is zero. To get extended error information, call <a href="https://docs.microsoft.com/windows/desktop/api/errhandlingapi/nf-errhandlingapi-getlasterror">GetLastError</a>.</para>
+            </returns>
+            <remarks>
+            <para>This function returns immediately. If the specified thread has not terminated and the function succeeds, the status returned is <b>STILL_ACTIVE</b>. If the thread has terminated and the function succeeds, the status returned is one of the following values: </para>
+            <para>This doc was truncated.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/processthreadsapi/nf-processthreadsapi-getexitcodethread#">Read more on learn.microsoft.com</see>.</para>
+            </remarks>
+        </member>
+        <member name="M:Windows.Win32.PInvoke.DuplicateHandle(System.Runtime.InteropServices.SafeHandle,System.Runtime.InteropServices.SafeHandle,System.Runtime.InteropServices.SafeHandle,Microsoft.Win32.SafeHandles.SafeFileHandle@,System.UInt32,Windows.Win32.Foundation.BOOL,Windows.Win32.Foundation.DUPLICATE_HANDLE_OPTIONS)">
+            <inheritdoc cref="M:Windows.Win32.PInvoke.DuplicateHandle(Windows.Win32.Foundation.HANDLE,Windows.Win32.Foundation.HANDLE,Windows.Win32.Foundation.HANDLE,Windows.Win32.Foundation.HANDLE*,System.UInt32,Windows.Win32.Foundation.BOOL,Windows.Win32.Foundation.DUPLICATE_HANDLE_OPTIONS)"/>
+        </member>
+        <member name="M:Windows.Win32.PInvoke.DuplicateHandle(Windows.Win32.Foundation.HANDLE,Windows.Win32.Foundation.HANDLE,Windows.Win32.Foundation.HANDLE,Windows.Win32.Foundation.HANDLE*,System.UInt32,Windows.Win32.Foundation.BOOL,Windows.Win32.Foundation.DUPLICATE_HANDLE_OPTIONS)">
+            <summary>Duplicates an object handle.</summary>
+            <param name="hSourceProcessHandle">
+            <para>A handle to the process with the handle to be duplicated.</para>
+            <para>The handle must have the PROCESS_DUP_HANDLE access right. For more information, see <a href="https://docs.microsoft.com/windows/desktop/ProcThread/process-security-and-access-rights">Process Security and Access Rights</a>.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/handleapi/nf-handleapi-duplicatehandle#parameters">Read more on learn.microsoft.com</see>.</para>
+            </param>
+            <param name="hSourceHandle">The handle to be duplicated. This is an open object handle that is valid in the context of the source process. For a list of objects whose handles can be duplicated, see the following Remarks section.</param>
+            <param name="hTargetProcessHandle">
+            <para>A handle to the process that is to receive the duplicated handle. The handle must have the PROCESS_DUP_HANDLE access right. This parameter is optional and can be specified as NULL if the **DUPLICATE_CLOSE_SOURCE** flag is set in _Options_.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/handleapi/nf-handleapi-duplicatehandle#parameters">Read more on learn.microsoft.com</see>.</para>
+            </param>
+            <param name="lpTargetHandle">
+            <para>A pointer to a variable that receives the duplicate handle. This handle value is valid in the context of the target process. If <i>hSourceHandle</i> is a pseudo handle returned by <a href="https://docs.microsoft.com/windows/desktop/api/processthreadsapi/nf-processthreadsapi-getcurrentprocess">GetCurrentProcess</a> or <a href="https://docs.microsoft.com/windows/desktop/api/processthreadsapi/nf-processthreadsapi-getcurrentthread">GetCurrentThread</a>, <b>DuplicateHandle</b> converts it to a real handle to a process or thread, respectively. If <i>lpTargetHandle</i> is <b>NULL</b>, the function duplicates the handle, but does not return the duplicate handle value to the caller. This behavior exists only for backward compatibility with previous versions of this function. You should not use this feature, as you will lose system resources until the target process terminates. This parameter is ignored if _hTargetProcessHandle_ is **NULL**.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/handleapi/nf-handleapi-duplicatehandle#parameters">Read more on learn.microsoft.com</see>.</para>
+            </param>
+            <param name="dwDesiredAccess">
+            <para>The access requested for the new handle. For the flags that can be specified for each object type, see the following Remarks section. This parameter is ignored if the <i>dwOptions</i> parameter specifies the DUPLICATE_SAME_ACCESS flag. Otherwise, the flags that can be specified depend on the type of object whose handle is to be duplicated. This parameter is ignored if _hTargetProcessHandle_ is **NULL**.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/handleapi/nf-handleapi-duplicatehandle#parameters">Read more on learn.microsoft.com</see>.</para>
+            </param>
+            <param name="bInheritHandle">
+            <para>A variable that indicates whether the handle is inheritable. If <b>TRUE</b>, the duplicate handle can be inherited by new processes created by the target process. If <b>FALSE</b>, the new handle cannot be inherited. This parameter is ignored if _hTargetProcessHandle_ is **NULL**.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/handleapi/nf-handleapi-duplicatehandle#parameters">Read more on learn.microsoft.com</see>.</para>
+            </param>
+            <param name="dwOptions"></param>
+            <returns>
+            <para>If the function succeeds, the return value is nonzero. If the function fails, the return value is zero. To get extended error information, call <a href="https://docs.microsoft.com/windows/desktop/api/errhandlingapi/nf-errhandlingapi-getlasterror">GetLastError</a>.</para>
+            </returns>
+            <remarks>
+            <para>The duplicate handle refers to the same object as the original handle. Therefore, any changes to the object are reflected through both handles. For example, if you duplicate a file handle, the current file position is always the same for both handles. For  file handles to have different file positions, use the <a href="https://docs.microsoft.com/windows/desktop/api/fileapi/nf-fileapi-createfilea">CreateFile</a> function to create file handles that share access to the same file. <b>DuplicateHandle</b> can be called by either the source process or the target process (or a process that is both the source and target process). For example, a process can use <b>DuplicateHandle</b> to create a noninheritable duplicate of an inheritable handle, or a handle with different access than the original handle. The source process uses the <a href="https://docs.microsoft.com/windows/desktop/api/processthreadsapi/nf-processthreadsapi-getcurrentprocess">GetCurrentProcess</a> function to get a handle to itself. This handle is a pseudo handle, but <b>DuplicateHandle</b> converts it to a real process handle. To get the target process handle, it may be necessary to use some form of interprocess communication (for example, a named pipe or shared memory) to communicate the process identifier to the source process. The source process can use this identifier in the <a href="https://docs.microsoft.com/windows/desktop/api/processthreadsapi/nf-processthreadsapi-openprocess">OpenProcess</a> function to obtain a handle to the target process. If the process that calls <b>DuplicateHandle</b> is not also the target process, the source process must use interprocess communication to pass the value of the duplicate handle to the target process. <b>DuplicateHandle</b> can be used to duplicate a handle between a 32-bit process and a 64-bit process. The resulting handle is appropriately sized to work in the target process. For more information, see <a href="https://docs.microsoft.com/windows/desktop/WinProg64/process-interoperability">Process Interoperability</a>. <b>DuplicateHandle</b> can duplicate handles to the following types of objects. </para>
+            <para>This doc was truncated.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/handleapi/nf-handleapi-duplicatehandle#">Read more on learn.microsoft.com</see>.</para>
+            </remarks>
+        </member>
+        <member name="M:Windows.Win32.PInvoke.FreeLibrary(Windows.Win32.Foundation.HMODULE)">
+            <summary>Frees the loaded dynamic-link library (DLL) module and, if necessary, decrements its reference count.</summary>
+            <param name="hLibModule">
+            <para>A handle to the loaded library module. The <a href="https://docs.microsoft.com/windows/desktop/api/libloaderapi/nf-libloaderapi-loadlibrarya">LoadLibrary</a>, <a href="https://docs.microsoft.com/windows/desktop/api/libloaderapi/nf-libloaderapi-loadlibraryexa">LoadLibraryEx</a>, <a href="https://docs.microsoft.com/windows/desktop/api/libloaderapi/nf-libloaderapi-getmodulehandlea">GetModuleHandle</a>, or <a href="https://docs.microsoft.com/windows/desktop/api/libloaderapi/nf-libloaderapi-getmodulehandleexa">GetModuleHandleEx</a> function returns this handle.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/libloaderapi/nf-libloaderapi-freelibrary#parameters">Read more on learn.microsoft.com</see>.</para>
+            </param>
+            <returns>
+            <para>If the function succeeds, the return value is nonzero. If the function fails, the return value is zero. To get extended error information, call the <a href="https://docs.microsoft.com/windows/desktop/api/errhandlingapi/nf-errhandlingapi-getlasterror">GetLastError</a> function.</para>
+            </returns>
+            <remarks>
+            <para>The system maintains a per-process reference count for each loaded module. A  module that was loaded at process initialization due to load-time dynamic linking has a reference count of one. The reference count for a module is incremented each time the  module is loaded by a call to <a href="https://docs.microsoft.com/windows/desktop/api/libloaderapi/nf-libloaderapi-loadlibrarya">LoadLibrary</a>. The reference count is also incremented by a call to <a href="https://docs.microsoft.com/windows/desktop/api/libloaderapi/nf-libloaderapi-loadlibraryexa">LoadLibraryEx</a> unless the  module  is being loaded for the first time and is being loaded as   a data or image file. The reference count is decremented each time the <b>FreeLibrary</b> or <a href="https://docs.microsoft.com/windows/desktop/api/libloaderapi/nf-libloaderapi-freelibraryandexitthread">FreeLibraryAndExitThread</a> function is called for the module. When a  module's reference count reaches zero or the process terminates, the system unloads the module from the address space of the  process. Before unloading a library module, the system enables the module to detach from the process by calling the module's <a href="https://docs.microsoft.com/windows/desktop/Dlls/dllmain">DllMain</a> function, if it has one, with the DLL_PROCESS_DETACH value. Doing so gives the library module an opportunity to clean up resources allocated on behalf of the current process. After the entry-point function returns, the library module is removed from the address space of the current process. It is not safe to call <b>FreeLibrary</b> from <a href="https://docs.microsoft.com/windows/desktop/Dlls/dllmain">DllMain</a>. For more information, see the Remarks section in <a href="https://docs.microsoft.com/windows/desktop/Dlls/dllmain">DllMain</a>. Calling <b>FreeLibrary</b> does not affect other processes that are using the same module. Use caution when calling <b>FreeLibrary</b> with a handle returned by <a href="https://docs.microsoft.com/windows/desktop/api/libloaderapi/nf-libloaderapi-getmodulehandlea">GetModuleHandle</a>. The <b>GetModuleHandle</b> function does not increment a module's reference count, so passing this handle to <b>FreeLibrary</b> can cause a module to be unloaded prematurely. A thread that must unload the DLL in which it is executing and then terminate itself should call <a href="https://docs.microsoft.com/windows/desktop/api/libloaderapi/nf-libloaderapi-freelibraryandexitthread">FreeLibraryAndExitThread</a> instead of calling <b>FreeLibrary</b> and <b>ExitThread</b> separately. Otherwise, a race condition can occur. For details, see the Remarks section of <a href="https://docs.microsoft.com/windows/desktop/api/libloaderapi/nf-libloaderapi-freelibraryandexitthread">FreeLibraryAndExitThread</a>.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/libloaderapi/nf-libloaderapi-freelibrary#">Read more on learn.microsoft.com</see>.</para>
+            </remarks>
+        </member>
+        <member name="M:Windows.Win32.PInvoke.GetModuleHandle(System.String)">
+            <inheritdoc cref="M:Windows.Win32.PInvoke.GetModuleHandle(Windows.Win32.Foundation.PCWSTR)"/>
+        </member>
+        <member name="M:Windows.Win32.PInvoke.GetModuleHandle(Windows.Win32.Foundation.PCWSTR)">
+            <summary>Retrieves a module handle for the specified module. The module must have been loaded by the calling process. (Unicode)</summary>
+            <param name="lpModuleName">
+            <para>The name of the loaded module (either a .dll or .exe file). If the file name extension is omitted, the default library extension .dll is appended. The file name string can include a trailing point character (.) to indicate that the module name has no extension. The string does not have to specify a path. When specifying a path, be sure to use backslashes (\\), not forward slashes (/). The name is compared (case independently) to the names of modules currently mapped into the address space of the calling process.</para>
+            <para>If this parameter is NULL, <b>GetModuleHandle</b> returns a handle to the file used to create the calling process (.exe file). The <b>GetModuleHandle</b> function does not retrieve handles for modules that were loaded using the <b>LOAD_LIBRARY_AS_DATAFILE</b> flag. For more information, see <a href="https://docs.microsoft.com/windows/desktop/api/libloaderapi/nf-libloaderapi-loadlibraryexa">LoadLibraryEx</a>.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/libloaderapi/nf-libloaderapi-getmodulehandlew#parameters">Read more on learn.microsoft.com</see>.</para>
+            </param>
+            <returns>
+            <para>If the function succeeds, the return value is a handle to the specified module. If the function fails, the return value is NULL. To get extended error information, call <a href="https://docs.microsoft.com/windows/desktop/api/errhandlingapi/nf-errhandlingapi-getlasterror">GetLastError</a>.</para>
+            </returns>
+            <remarks>
+            <para>The returned handle is not global or inheritable. It cannot be duplicated or used by another process. If <i>lpModuleName</i> does not include a path and there is more than one loaded module with the same base name and extension, you cannot predict which module handle will be returned. To work around this problem, you could specify a path, use <a href="https://docs.microsoft.com/windows/desktop/Msi/side-by-side-assemblies">side-by-side assemblies</a>, or use <a href="https://docs.microsoft.com/windows/desktop/api/libloaderapi/nf-libloaderapi-getmodulehandleexa">GetModuleHandleEx</a> to specify a memory location rather than a DLL name. The <b>GetModuleHandle</b> function returns a handle to a mapped module without incrementing its reference count. However, if this handle is passed to the <a href="https://docs.microsoft.com/windows/desktop/api/libloaderapi/nf-libloaderapi-freelibrary">FreeLibrary</a> function, the reference count of the mapped module will be decremented. Therefore, do not pass a handle returned by <b>GetModuleHandle</b> to the <b>FreeLibrary</b> function. Doing so can cause a DLL module to be unmapped prematurely. This function must be used carefully in a multithreaded application. There is no guarantee that the module handle remains valid between the time this function returns the handle and the time it is used. For example, suppose that a thread retrieves a module handle, but before it uses the handle, a second thread frees the module. If the system loads another module, it could reuse the module handle that was recently freed. Therefore, the first thread would have a handle to a different module  than the one intended.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/libloaderapi/nf-libloaderapi-getmodulehandlew#">Read more on learn.microsoft.com</see>.</para>
+            </remarks>
+        </member>
+        <member name="M:Windows.Win32.PInvoke.GetProcAddress(System.Runtime.InteropServices.SafeHandle,System.String)">
+            <inheritdoc cref="M:Windows.Win32.PInvoke.GetProcAddress(Windows.Win32.Foundation.HMODULE,Windows.Win32.Foundation.PCSTR)"/>
+        </member>
+        <member name="M:Windows.Win32.PInvoke.GetProcAddress(Windows.Win32.Foundation.HMODULE,Windows.Win32.Foundation.PCSTR)">
+            <summary>Retrieves the address of an exported function or variable from the specified dynamic-link library (DLL).</summary>
+            <param name="hModule">
+            <para>A handle to the DLL module that contains the function or variable. The <a href="https://docs.microsoft.com/windows/desktop/api/libloaderapi/nf-libloaderapi-loadlibrarya">LoadLibrary</a>, <a href="https://docs.microsoft.com/windows/desktop/api/libloaderapi/nf-libloaderapi-loadlibraryexa">LoadLibraryEx</a>, <a href="https://docs.microsoft.com/windows/desktop/api/winbase/nf-winbase-loadpackagedlibrary">LoadPackagedLibrary</a>, or <a href="https://docs.microsoft.com/windows/desktop/api/libloaderapi/nf-libloaderapi-getmodulehandlea">GetModuleHandle</a> function returns this handle. The <b>GetProcAddress</b> function does not retrieve addresses from modules that were loaded using the <b>LOAD_LIBRARY_AS_DATAFILE</b> flag. For more information, see <a href="https://docs.microsoft.com/windows/desktop/api/libloaderapi/nf-libloaderapi-loadlibraryexa">LoadLibraryEx</a>.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/libloaderapi/nf-libloaderapi-getprocaddress#parameters">Read more on learn.microsoft.com</see>.</para>
+            </param>
+            <param name="lpProcName">The function or variable name, or the function's ordinal value. If this parameter is an ordinal value, it must be in the low-order word; the high-order word must be zero.</param>
+            <returns>
+            <para>If the function succeeds, the return value is the address of the exported function or variable. If the function fails, the return value is NULL. To get extended error information, call <a href="https://docs.microsoft.com/windows/desktop/api/errhandlingapi/nf-errhandlingapi-getlasterror">GetLastError</a>.</para>
+            </returns>
+            <remarks>
+            <para>The spelling and case of a function name pointed to by <i>lpProcName</i> must be identical to that in the <b>EXPORTS</b> statement of the source DLL's module-definition (.def) file. The exported names of functions may differ from the names you use when calling these functions in your code. This difference is hidden by macros used in the SDK header files. For more information, see <a href="https://docs.microsoft.com/windows/desktop/Intl/conventions-for-function-prototypes">Conventions for Function Prototypes</a>. The <i>lpProcName</i> parameter can identify the DLL function by specifying an ordinal value associated with the function in the <b>EXPORTS</b> statement. <b>GetProcAddress</b> verifies that the specified ordinal is in the range 1 through the highest ordinal value exported in the .def file. The function then uses the ordinal as an index to read the function's address from a function table. If the .def file does not number the functions consecutively from 1 to <i>N</i> (where <i>N</i> is the number of exported functions), an error can occur where <b>GetProcAddress</b> returns an invalid, non-NULL address, even though there is no function with the specified ordinal. If the function might not exist in the DLL module—for example, if the function  is available only on Windows Vista but the application  might be running on Windows XP—specify the function by name rather than by ordinal value and design your application to handle the case when the function is not available, as shown in the following code fragment.</para>
+            <para></para>
+            <para>This doc was truncated.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/libloaderapi/nf-libloaderapi-getprocaddress#">Read more on learn.microsoft.com</see>.</para>
+            </remarks>
+        </member>
+        <member name="M:Windows.Win32.PInvoke.MessageBox(Windows.Win32.Foundation.HWND,System.String,System.String,Windows.Win32.UI.WindowsAndMessaging.MESSAGEBOX_STYLE)">
+            <inheritdoc cref="M:Windows.Win32.PInvoke.MessageBox(Windows.Win32.Foundation.HWND,Windows.Win32.Foundation.PCWSTR,Windows.Win32.Foundation.PCWSTR,Windows.Win32.UI.WindowsAndMessaging.MESSAGEBOX_STYLE)"/>
+        </member>
+        <member name="M:Windows.Win32.PInvoke.MessageBox(Windows.Win32.Foundation.HWND,Windows.Win32.Foundation.PCWSTR,Windows.Win32.Foundation.PCWSTR,Windows.Win32.UI.WindowsAndMessaging.MESSAGEBOX_STYLE)">
+            <summary>Displays a modal dialog box that contains a system icon, a set of buttons, and a brief application-specific message, such as status or error information. The message box returns an integer value that indicates which button the user clicked. (MessageBoxW)</summary>
+            <param name="hWnd">
+            <para>Type: <b>HWND</b> A handle to the owner window of the message box to be created. If this parameter is <b>NULL</b>, the message box has no owner window.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/winuser/nf-winuser-messageboxw#parameters">Read more on learn.microsoft.com</see>.</para>
+            </param>
+            <param name="lpText">
+            <para>Type: <b>LPCTSTR</b> The message to be displayed. If the string consists of more than one line, you can separate the lines using a carriage return and/or linefeed character between each line.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/winuser/nf-winuser-messageboxw#parameters">Read more on learn.microsoft.com</see>.</para>
+            </param>
+            <param name="lpCaption">
+            <para>Type: <b>LPCTSTR</b> The dialog box title. If this parameter is <b>NULL</b>, the default title is <b>Error</b>.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/winuser/nf-winuser-messageboxw#parameters">Read more on learn.microsoft.com</see>.</para>
+            </param>
+            <param name="uType">
+            <para>Type: <b>UINT</b> The contents and behavior of the dialog box. This parameter can be a combination of flags from the following groups of flags.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/winuser/nf-winuser-messageboxw#parameters">Read more on learn.microsoft.com</see>.</para>
+            </param>
+            <returns>
+            <para>Type: <b>int</b> If a message box has a <b>Cancel</b> button, the function returns the <b>IDCANCEL</b> value if either the ESC key is pressed or the <b>Cancel</b> button is selected. If the message box has no <b>Cancel</b> button, pressing ESC will no effect - unless an MB_OK button is present. If an MB_OK button is displayed and the user presses ESC, the return value will be <b>IDOK</b>. If the function fails, the return value is zero. To get extended error information, call <a href="https://docs.microsoft.com/windows/desktop/api/errhandlingapi/nf-errhandlingapi-getlasterror">GetLastError</a>. If the function succeeds, the return value is one of the following menu-item values. </para>
+            <para>This doc was truncated.</para>
+            </returns>
+            <remarks>
+            <para>The following system icons can be used in a message box by setting the <i>uType</i> parameter to the corresponding flag value. </para>
+            <para>This doc was truncated.</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/winuser/nf-winuser-messageboxw#">Read more on learn.microsoft.com</see>.</para>
+            </remarks>
+        </member>
+        <member name="T:Windows.Win32.Security.SECURITY_ATTRIBUTES">
+            <summary>The SECURITY_ATTRIBUTES structure contains the security descriptor for an object and specifies whether the handle retrieved by specifying this structure is inheritable.</summary>
+            <remarks></remarks>
+        </member>
+        <member name="F:Windows.Win32.Security.SECURITY_ATTRIBUTES.nLength">
+            <summary>The size, in bytes, of this structure. Set this value to the size of the **SECURITY\_ATTRIBUTES** structure.</summary>
+        </member>
+        <member name="F:Windows.Win32.Security.SECURITY_ATTRIBUTES.lpSecurityDescriptor">
+            <summary>
+            <para>A pointer to a [**SECURITY\_DESCRIPTOR**](../winnt/ns-winnt-security_descriptor.md) structure that controls access to the object. If the value of this member is **NULL**, the object is assigned the default security descriptor associated with the [*access token*](/windows/win32/secauthz/access-tokens) of the calling process. This is not the same as granting access to everyone by assigning a **NULL** [*discretionary access control list*](/windows/win32/secauthz/dacls-and-aces) (DACL). By default, the default DACL in the access token of a process allows access only to the user represented by the access token. For information about creating a security descriptor, see [Creating a Security Descriptor](/windows/win32/secauthz/creating-a-security-descriptor-for-a-new-object-in-c--).</para>
+            <para><see href="https://learn.microsoft.com/windows/win32/api/wtypesbase/ns-wtypesbase-security_attributes#members">Read more on learn.microsoft.com</see>.</para>
+            </summary>
+        </member>
+        <member name="F:Windows.Win32.Security.SECURITY_ATTRIBUTES.bInheritHandle">
+            <summary>A Boolean value that specifies whether the returned handle is inherited when a new process is created. If this member is **TRUE**, the new process inherits the handle.</summary>
+        </member>
+    </members>
+</doc>
