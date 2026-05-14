@@ -3,3 +3,5 @@ obj/
 bin/
 *.user
 BenchmarkDotNet.Artifacts/
+# Local Dalamud assemblies
+dalamud/
