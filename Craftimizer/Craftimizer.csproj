@@ -2,6 +2,7 @@
 <Project Sdk="Dalamud.NET.Sdk/15.0.0">
   <PropertyGroup>
     <Authors>Asriel Camora</Authors>
+    <AssemblyName>CraftimizerFork</AssemblyName>
     <Version>2.9.1.1</Version>
     <PackageProjectUrl>https://github.com/WorkingRobot/Craftimizer.git</PackageProjectUrl>
     <Configurations>Debug;Release</Configurations>
