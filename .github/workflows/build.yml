@@ -66,13 +66,22 @@ jobs:
       - name: Package Release Zip
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          OUTDIR="${{env.PROJECT_NAME}}/bin/x64/Release/${{env.PROJECT_NAME}}"
-          echo "Files in output dir:"; ls "$OUTDIR"
+          set -x
+          echo "=== Searching for plugin DLL ==="
+          find . -name "${{env.PROJECT_NAME}}.dll" 2>/dev/null
+          OUTDIR=$(find . -name "${{env.PROJECT_NAME}}.dll" -not -path "*/obj/*" | head -1 | xargs dirname)
+          echo "=== Output dir: $OUTDIR ==="
+          ls -la "$OUTDIR"
           cp "$OUTDIR/${{env.PROJECT_NAME}}.dll" "$OUTDIR/CraftimizerFork.dll"
-          cp "$OUTDIR/${{env.PROJECT_NAME}}.json" "$OUTDIR/CraftimizerFork.json"
-          sed -i 's/"InternalName": "Craftimizer"/"InternalName": "CraftimizerFork"/g' "$OUTDIR/CraftimizerFork.json"
+          python3 -c "
+import json
+with open('$OUTDIR/${{env.PROJECT_NAME}}.json') as f: d = json.load(f)
+d['InternalName'] = 'CraftimizerFork'
+d['Name'] = 'Craftimizer (Fork)'
+with open('$OUTDIR/CraftimizerFork.json', 'w') as f: json.dump(d, f, indent=4)
+"
           rm "$OUTDIR/${{env.PROJECT_NAME}}.dll" "$OUTDIR/${{env.PROJECT_NAME}}.json"
-          cd "$OUTDIR" && zip -r ${{github.workspace}}/${{env.PROJECT_NAME}}.zip .
+          cd "$OUTDIR" && zip -r "${{github.workspace}}/${{env.PROJECT_NAME}}.zip" .
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
