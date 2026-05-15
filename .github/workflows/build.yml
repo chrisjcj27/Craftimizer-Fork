@@ -6,6 +6,7 @@ on:
 env:
   PLUGIN_REPO: WorkingRobot/MyDalamudPlugins
   PROJECT_NAME: Craftimizer
+  ASSEMBLY_NAME: CraftimizerFork
   IS_OFFICIAL: ${{true}}
 
 jobs:
@@ -49,7 +50,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{env.PROJECT_NAME}}
-          path: ${{env.PROJECT_NAME}}/bin/x64/Release/${{env.PROJECT_NAME}}
+          path: ${{env.PROJECT_NAME}}/bin/x64/Release/${{env.ASSEMBLY_NAME}}
           if-no-files-found: error
 
       - name: Upload Test Results
@@ -62,7 +63,7 @@ jobs:
       - name: Package Release Zip
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          cd ${{env.PROJECT_NAME}}/bin/x64/Release/${{env.PROJECT_NAME}}
+          cd ${{env.PROJECT_NAME}}/bin/x64/Release/${{env.ASSEMBLY_NAME}}
           zip -r ${{github.workspace}}/${{env.PROJECT_NAME}}.zip .
 
       - name: Create Release
