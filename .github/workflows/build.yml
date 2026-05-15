@@ -67,6 +67,9 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           cd ${{env.PROJECT_NAME}}/bin/x64/Release/${{env.PROJECT_NAME}}
+          mv ${{env.PROJECT_NAME}}.dll CraftimizerFork.dll
+          mv ${{env.PROJECT_NAME}}.json CraftimizerFork.json
+          sed -i 's/"InternalName": "Craftimizer"/"InternalName": "CraftimizerFork"/' CraftimizerFork.json
           zip -r ${{github.workspace}}/${{env.PROJECT_NAME}}.zip .
 
       - name: Create Release
